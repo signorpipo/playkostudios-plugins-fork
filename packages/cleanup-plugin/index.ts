@@ -1,4 +1,4 @@
-import { Access, data, EditorPlugin, project, ui } from '@wonderlandengine/editor-api';
+import { Access, data, EditorPlugin, project, Resource, ui } from '@wonderlandengine/editor-api';
 import { existsSync } from 'node:fs';
 
 const EPSILON = 1e-6;
@@ -75,10 +75,11 @@ export default class PlaykoStudiosCleanupPlugin extends EditorPlugin {
             'skins',
         ]) {
             const list: string[] = [];
-            for (const k of Object.keys((data as any)[res])) {
-                const file = (data as any)[res][k].link?.file;
+            const resources = (data as unknown as Record<string, Record<string, Resource>>)[res];
+            for (const resourceKey of Object.keys(resources)) {
+                const file = resources[resourceKey].link?.file;
                 if (file && file !== 'default' && !this.linkExists(file)) {
-                    list.push(k);
+                    list.push(resourceKey);
                 }
             }
 
