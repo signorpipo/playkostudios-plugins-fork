@@ -12,6 +12,8 @@ const QUAT_IDENTITY = [0, 0, 0, 1] as const;
 export default class PlaykoStudiosCleanupPlugin extends EditorPlugin {
     result: Record<string, string[]> = {};
 
+    private simplifyLinkedTranforms: boolean = false;
+
     /* The constructor is called when your plugin is loaded */
     constructor() {
         super();
@@ -40,6 +42,10 @@ export default class PlaykoStudiosCleanupPlugin extends EditorPlugin {
         if (ui.button('Delete all')) {
             this.cleanup();
         }
+
+        ui.separator();
+        ui.text('Simplify Transforms');
+        this.simplifyLinkedTranforms = ui.checkbox("Simplify Linked", this.simplifyLinkedTranforms) ?? this.simplifyLinkedTranforms;
     }
 
     LINK_CACHE: Record<string, boolean> = {};
@@ -95,11 +101,12 @@ export default class PlaykoStudiosCleanupPlugin extends EditorPlugin {
         for (const object of Object.values(data.objects)) {
             const isLinked = object.link !== null;
 
-            // linked objects have different defaults, so they shouldn't be
-            // deleted, only rounded
-            this.simplifyVector(object, 'translation', VEC3_ZERO, !isLinked);
-            this.simplifyVector(object, 'scaling', VEC3_ONE, !isLinked);
-            this.simplifyVector(object, 'rotation', QUAT_IDENTITY, !isLinked);
+            if (!isLinked || this.simplifyLinkedTranforms) {
+                // linked objects have different defaults, so they shouldn't be deleted, only rounded
+                this.simplifyVector(object, 'translation', VEC3_ZERO, !isLinked);
+                this.simplifyVector(object, 'scaling', VEC3_ONE, !isLinked);
+                this.simplifyVector(object, 'rotation', QUAT_IDENTITY, !isLinked);
+            }
 
             if (!object.exists?.('components')) continue;
 
